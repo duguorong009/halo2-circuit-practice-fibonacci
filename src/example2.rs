@@ -186,11 +186,11 @@ fn main() {
     root.fill(&WHITE).unwrap();
     let root = root.titled("Fib 2 Layout", ("sans-serif", 60)).unwrap();
 
-    let circuit = FiboCircuit {
-        a: Value::known(Fp::from(1)),
-        b: Value::known(Fp::from(1)),
-    };
+    // let circuit = FiboCircuit {
+    //     a: Value::known(Fp::from(1)),
+    //     b: Value::known(Fp::from(1)),
+    // };
     halo2_proofs::dev::CircuitLayout::default()
-        .render(13, &circuit, &root)
+        .render(k, &fibo_circuit, &root)
         .unwrap();
 }
