@@ -64,48 +64,33 @@ impl<F: FieldExt> FiboChip<F> {
         }
     }
 
-    pub fn assign_first_row(
+    pub fn assign(
         &self,
         mut layouter: impl Layouter<F>,
         a: Value<F>,
         b: Value<F>,
-    ) -> Result<(AssignedCell<F, F>, AssignedCell<F, F>, AssignedCell<F, F>), Error> {
+        nrows: usize,
+    ) -> Result<AssignedCell<F, F>, Error> {
         layouter.assign_region(
-            || "first row",
+            || "entire fibonacci table",
             |mut region| {
                 self.config.selector.enable(&mut region, 0)?;
+                let mut a_cell = region.assign_advice(|| "a", self.config.advice, 0, || a)?;
+                let mut b_cell = region.assign_advice(|| "b", self.config.advice, 1, || b)?;
 
-                let a_cell = region.assign_advice(|| "a", self.config.advice, 0, || a)?;
-                let b_cell = region.assign_advice(|| "b", self.config.advice, 1, || b)?;
-                let c_cell = region.assign_advice(|| "c", self.config.advice, 2, || a + b)?;
+                for row in 2..nrows {
+                    if row < nrows - 2 {
+                        self.config.selector.enable(&mut region, row)?;
+                    }
 
-                Ok((a_cell, b_cell, c_cell))
-            },
-        )
-    }
+                    let c_val = a_cell.value().copied() + b_cell.value().copied();
+                    let c_cell = region.assign_advice(|| "c", self.config.advice, row, || c_val)?;
 
-    pub fn assign_row(
-        &self,
-        mut layouter: impl Layouter<F>,
-        prev_b: AssignedCell<F, F>,
-        prev_c: AssignedCell<F, F>,
-    ) -> Result<(AssignedCell<F, F>, AssignedCell<F, F>), Error> {
-        layouter.assign_region(
-            || "next row",
-            |mut region| {
-                self.config.selector.enable(&mut region, 0)?;
+                    a_cell = b_cell;
+                    b_cell = c_cell;
+                }
 
-                let _a_cell = prev_b.copy_advice(|| "a", &mut region, self.config.advice, 0)?;
-                let b_cell = prev_c.copy_advice(|| "b", &mut region, self.config.advice, 1)?;
-
-                let c_cell = region.assign_advice(
-                    || "c",
-                    self.config.advice,
-                    2,
-                    || prev_b.value().copied() + prev_c.value().copied(),
-                )?;
-
-                Ok((b_cell, c_cell))
+                Ok(b_cell)
             },
         )
     }
@@ -149,27 +134,21 @@ impl<F: FieldExt> Circuit<F> for FiboCircuit<F> {
     ) -> Result<(), Error> {
         let cs = FiboChip::construct(config);
 
-        let (_, mut prev_b, mut prev_c) =
-            cs.assign_first_row(layouter.namespace(|| "first row"), self.a, self.b)?;
+        let last_cell = cs.assign(
+            layouter.namespace(|| "assign entire table"),
+            self.a,
+            self.b,
+            10,
+        )?;
 
-        for _ in 3..10 {
-            let (b, c) = cs.assign_row(
-                layouter.namespace(|| "next row"),
-                prev_b.clone(),
-                prev_c.clone(),
-            )?;
-            prev_b = b;
-            prev_c = c;
-        }
-
-        cs.expose_public(layouter.namespace(|| "expose public"), prev_c, 0)?;
+        cs.expose_public(layouter.namespace(|| "expose public"), last_cell, 0)?;
 
         Ok(())
     }
 }
 
 fn main() {
-    let k = 5;
+    let k = 4;
 
     let fibo_circuit = FiboCircuit {
         a: Value::known(Fp::from(1)),
