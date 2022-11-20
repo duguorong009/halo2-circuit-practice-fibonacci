@@ -11,9 +11,9 @@ use halo2_proofs::{
 
 #[derive(Debug, Clone)]
 struct FiboConfig {
-    pub advice: [Column<Advice>; 3],
-    pub selector: Selector,
-    pub instance: Column<Instance>,
+    advice: [Column<Advice>; 3],
+    selector: Selector,
+    instance: Column<Instance>,
 }
 
 #[derive(Debug)]
@@ -173,9 +173,9 @@ fn main() {
         a: Value::known(Fp::from(1)),
         b: Value::known(Fp::from(1)),
     };
-    let output = Fp::from(55);
+    let public_input = vec![Fp::from(55)];
 
-    let prover = MockProver::run(k, &fibo_circuit, vec![vec![output]]).unwrap();
+    let prover = MockProver::run(k, &fibo_circuit, vec![public_input]).unwrap();
     prover.assert_satisfied();
 
     // Plot the circuit
