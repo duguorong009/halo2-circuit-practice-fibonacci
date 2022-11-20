@@ -70,6 +70,7 @@ impl<F: FieldExt> FiboChip<F> {
         layouter.assign_region(
             || "first row",
             |mut region| {
+                self.config.selector.enable(&mut region, 0)?;
                 let a_cell = region.assign_advice(|| "a", self.config.advice[0], 0, || a)?;
                 let b_cell = region.assign_advice(|| "b", self.config.advice[1], 0, || b)?;
                 let c_cell = region.assign_advice(|| "c", self.config.advice[2], 0, || a + b)?;
@@ -88,6 +89,7 @@ impl<F: FieldExt> FiboChip<F> {
         layouter.assign_region(
             || "next row",
             |mut region| {
+                self.config.selector.enable(&mut region, 0)?;
                 let _a_cell = prev_b.copy_advice(|| "a", &mut region, self.config.advice[0], 0)?;
                 let b_cell = prev_c.copy_advice(|| "b", &mut region, self.config.advice[1], 0)?;
 
