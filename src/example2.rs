@@ -75,6 +75,8 @@ impl<F: FieldExt> FiboChip<F> {
             || "entire fibonacci table",
             |mut region| {
                 self.config.selector.enable(&mut region, 0)?;
+                self.config.selector.enable(&mut region, 1)?;
+
                 let mut a_cell = region.assign_advice(|| "a", self.config.advice, 0, || a)?;
                 let mut b_cell = region.assign_advice(|| "b", self.config.advice, 1, || b)?;
 
