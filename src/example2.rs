@@ -43,14 +43,14 @@ impl<F: FieldExt> FiboChip<F> {
         meta.create_gate("fibonacci", |meta| {
             //
             // advice | selector
-            //   a    |    s
-            //   b    |
+            //   a    |
+            //   b    |    s
             //   c    |
             //
 
-            let a = meta.query_advice(advice, Rotation(0));
-            let b = meta.query_advice(advice, Rotation(1));
-            let c = meta.query_advice(advice, Rotation(2));
+            let a = meta.query_advice(advice, Rotation::prev());
+            let b = meta.query_advice(advice, Rotation::cur());
+            let c = meta.query_advice(advice, Rotation::next());
 
             let s = meta.query_selector(selector);
 
@@ -74,14 +74,14 @@ impl<F: FieldExt> FiboChip<F> {
         layouter.assign_region(
             || "entire fibonacci table",
             |mut region| {
-                self.config.selector.enable(&mut region, 0)?;
+                // self.config.selector.enable(&mut region, 0)?;
                 self.config.selector.enable(&mut region, 1)?;
 
                 let mut a_cell = region.assign_advice(|| "a", self.config.advice, 0, || a)?;
                 let mut b_cell = region.assign_advice(|| "b", self.config.advice, 1, || b)?;
 
                 for row in 2..nrows {
-                    if row < nrows - 2 {
+                    if row < nrows - 1 {
                         self.config.selector.enable(&mut region, row)?;
                     }
 
