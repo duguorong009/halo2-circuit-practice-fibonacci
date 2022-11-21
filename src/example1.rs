@@ -185,11 +185,6 @@ fn main() {
     let root = BitMapBackend::new("fib-1-layout.png", (1024, 768)).into_drawing_area();
     root.fill(&WHITE).unwrap();
     let root = root.titled("Fib 1 Layout", ("sans-serif", 60)).unwrap();
-
-    // let circuit = FiboCircuit {
-    //     a: Value::known(Fp::from(1)),
-    //     b: Value::known(Fp::from(1)),
-    // };
     halo2_proofs::dev::CircuitLayout::default()
         .render(k, &fibo_circuit, &root)
         .unwrap();
